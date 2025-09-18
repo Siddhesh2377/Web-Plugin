@@ -6,7 +6,8 @@
     "role": "Tool-Neuron-Team",
     "pluginApi":"0.0.6-alpha"
   },
-  "mainClass" : "com.mp.web_searching.WebPlugin",
+  "pluginType": "Hybrid",
+  "mainClass" : "com.mp.web_searching.WebSearchPlugin",
   "tools": [
     {
       "toolName" : "searchWeb",

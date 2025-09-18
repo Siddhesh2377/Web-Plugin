@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.mp.web_plugin.ui.theme.WebPluginTheme
-import com.mp.web_searching.WebPlugin
+import com.mp.web_searching.WebSearchPlugin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
                     val context = LocalContext.current
 
                     Column(Modifier.padding(innerPadding)) {
-                        WebPlugin(context).WebPluginUi()
+                        WebSearchPlugin(context).ToolPreviewContent()
                     }
                 }
             }

@@ -1,0 +1,19 @@
+{
+  "name": "Web-Searching",
+  "description": "A Plugin For Doing WebSearch Operations",
+  "metaData": {
+    "author": "Siddhesh",
+    "role": "Tool-Neuron-Team",
+    "pluginApi":"0.0.6-alpha"
+  },
+  "mainClass" : "com.mp.web_searching.WebPlugin",
+  "tools": [
+    {
+      "toolName" : "searchWeb",
+      "description": "This Tool Helps In WebSearch",
+      "args" : {
+        "query": "String"
+      }
+    }
+  ]
+}

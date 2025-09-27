@@ -3,8 +3,8 @@ package com.mp.web_automation.parser
 import android.util.Log
 import com.mp.web_automation.analyzer.WebPageContext
 import com.mp.web_automation.analyzer.WebPageElement
-import com.mp.web_automation.models.WebAction
 import com.mp.web_automation.models.ActionType
+import com.mp.web_automation.models.WebAction
 
 object AdvancedCommandParser {
     fun parseCommands(aiResponse: String, context: WebPageContext): List<WebAction> {
@@ -26,12 +26,34 @@ object AdvancedCommandParser {
                     val targetId = extractQuotedValue(line, "into.*id\\s+'([^']+)'")
                     val targetSel = extractQuotedValue(line, "into.*selector\\s+'([^']+)'")
                     when {
-                        targetSel != null && text != null -> actions.add(WebAction(ActionType.TYPE, selector = targetSel, value = text))
-                        targetId != null && text != null -> actions.add(WebAction(ActionType.TYPE, selector = "#${targetId}", value = text))
+                        targetSel != null && text != null -> actions.add(
+                            WebAction(
+                                ActionType.TYPE,
+                                selector = targetSel,
+                                value = text
+                            )
+                        )
+
+                        targetId != null && text != null -> actions.add(
+                            WebAction(
+                                ActionType.TYPE,
+                                selector = "#${targetId}",
+                                value = text
+                            )
+                        )
+
                         text != null -> {
                             // Try find an input by placeholder or label
                             val input = findInputByText(context, text)
-                            input?.let { actions.add(WebAction(ActionType.TYPE, selector = it.selector, value = text)) }
+                            input?.let {
+                                actions.add(
+                                    WebAction(
+                                        ActionType.TYPE,
+                                        selector = it.selector,
+                                        value = text
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -46,20 +68,45 @@ object AdvancedCommandParser {
                         text != null -> {
                             // resolve by matching context
                             val resolved = resolveByText(context, text)
-                            if (resolved != null) actions.add(WebAction(ActionType.CLICK, selector = resolved.selector, value = text))
-                            else actions.add(WebAction(ActionType.CLICK, value = text)) // leave unresolved, executor will fallback
+                            if (resolved != null) actions.add(
+                                WebAction(
+                                    ActionType.CLICK,
+                                    selector = resolved.selector,
+                                    value = text
+                                )
+                            )
+                            else actions.add(
+                                WebAction(
+                                    ActionType.CLICK,
+                                    value = text
+                                )
+                            ) // leave unresolved, executor will fallback
                         }
+
                         else -> {
                             // generic click fallback: try to click the first prominent button
-                            val firstBtn = context.buttons.firstOrNull() ?: context.links.firstOrNull()
-                            firstBtn?.let { actions.add(WebAction(ActionType.CLICK, selector = it.selector)) }
+                            val firstBtn =
+                                context.buttons.firstOrNull() ?: context.links.firstOrNull()
+                            firstBtn?.let {
+                                actions.add(
+                                    WebAction(
+                                        ActionType.CLICK,
+                                        selector = it.selector
+                                    )
+                                )
+                            }
                         }
                     }
                 }
 
                 lower.contains("submit form") -> {
                     val formId = extractQuotedValue(line, "form with id\\s+'([^']+)'")
-                    if (formId != null) actions.add(WebAction(ActionType.SUBMIT_FORM, selector = "#${formId}"))
+                    if (formId != null) actions.add(
+                        WebAction(
+                            ActionType.SUBMIT_FORM,
+                            selector = "#${formId}"
+                        )
+                    )
                     else actions.add(WebAction(ActionType.SUBMIT_FORM))
                 }
 
@@ -81,7 +128,13 @@ object AdvancedCommandParser {
                         val quoted = extractQuotedValue(line, "'([^']+)'")
                         if (quoted != null) {
                             val resolved = resolveByText(context, quoted)
-                            if (resolved != null) actions.add(WebAction(ActionType.CLICK, selector = resolved.selector, value = quoted))
+                            if (resolved != null) actions.add(
+                                WebAction(
+                                    ActionType.CLICK,
+                                    selector = resolved.selector,
+                                    value = quoted
+                                )
+                            )
                         }
                     }
                 }
@@ -109,26 +162,33 @@ object AdvancedCommandParser {
 
     private fun resolveByText(context: WebPageContext, text: String): WebPageElement? {
         // Prefer buttons, then links, then any element. Use contains (case-insensitive).
-        val byButton = context.buttons.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
+        val byButton =
+            context.buttons.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
         if (byButton != null) return byButton
-        val byLink = context.links.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
+        val byLink =
+            context.links.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
         if (byLink != null) return byLink
-        val byAny = context.allElements.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
+        val byAny =
+            context.allElements.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
         return byAny
     }
 
     private fun findInputByText(context: WebPageContext, text: String): WebPageElement? {
         // Try placeholders, labels and types like 'search'
-        val byPlaceholder = context.inputs.firstOrNull { it.placeholder?.contains(text, ignoreCase = true) == true }
+        val byPlaceholder =
+            context.inputs.firstOrNull { it.placeholder?.contains(text, ignoreCase = true) == true }
         if (byPlaceholder != null) return byPlaceholder
-        val byLabel = context.textElements.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
+        val byLabel =
+            context.textElements.firstOrNull { it.text?.contains(text, ignoreCase = true) == true }
         // if label found, try nearby input by position heuristic
         if (byLabel != null) {
-            val near = context.inputs.minByOrNull { kotlin.math.abs(it.position - byLabel.position) }
+            val near =
+                context.inputs.minByOrNull { kotlin.math.abs(it.position - byLabel.position) }
             if (near != null) return near
         }
         // fallback: any input of type search or text
-        val searchInput = context.inputs.firstOrNull { it.type?.contains("search", ignoreCase = true) == true }
+        val searchInput =
+            context.inputs.firstOrNull { it.type?.contains("search", ignoreCase = true) == true }
         if (searchInput != null) return searchInput
         return context.inputs.firstOrNull()
     }

@@ -4,29 +4,39 @@ import android.util.Log
 import android.webkit.WebView
 import com.mp.web_automation.analyzer.WebPageAnalyzer
 import com.mp.web_automation.analyzer.WebPageContext
+import com.mp.web_automation.models.ActionType
 import com.mp.web_automation.models.Message
 import com.mp.web_automation.models.Role
 import com.mp.web_automation.models.WebAction
-import com.mp.web_automation.models.ActionType
 import com.mp.web_automation.network.ApiClient
 import com.mp.web_automation.parser.AdvancedCommandParser
 import kotlinx.coroutines.delay
 
 object ContextAwareAgent {
 
-    fun initialize(apiKey: String) { ApiClient.initialize(apiKey) }
+    fun initialize(apiKey: String) {
+        ApiClient.initialize(apiKey)
+    }
 
     // Top-level function: process user request with repeated analyze -> act cycles
-    suspend fun processUserRequestWithContext(userRequest: String, webView: WebView): Result<String> {
+    suspend fun processUserRequestWithContext(
+        userRequest: String,
+        webView: WebView
+    ): Result<String> {
         try {
-            var pageContext = WebPageAnalyzer.analyzePage(webView) ?: return Result.failure(Exception("Failed to analyze webpage"))
+            var pageContext = WebPageAnalyzer.analyzePage(webView) ?: return Result.failure(
+                Exception("Failed to analyze webpage")
+            )
 
             // Build initial prompt
             var prompt = createContextPrompt(userRequest, pageContext)
             prompt = getSystemPrompt() + "\n\n" + prompt
 
             // Send to AI
-            val messages = listOf(Message(Role.SYSTEM.toString(), getSystemPrompt()), Message(Role.USER.toString(), prompt))
+            val messages = listOf(
+                Message(Role.SYSTEM.toString(), getSystemPrompt()),
+                Message(Role.USER.toString(), prompt)
+            )
             val result = ApiClient.sendChatMessage(messages)
 
             result.onFailure { return Result.failure(it) }
@@ -64,8 +74,14 @@ object ContextAwareAgent {
                 }
 
                 // After executing current actions, re-prompt the AI with updated context and remaining goal
-                val followUpPrompt = createContextPrompt(userRequest, pageContext) + "\n\nPREVIOUS_ACTIONS:\n" + actions.joinToString("\n")
-                val followMessages = listOf(Message(Role.SYSTEM.toString(), getSystemPrompt()), Message(Role.USER.toString(), followUpPrompt))
+                val followUpPrompt = createContextPrompt(
+                    userRequest,
+                    pageContext
+                ) + "\n\nPREVIOUS_ACTIONS:\n" + actions.joinToString("\n")
+                val followMessages = listOf(
+                    Message(Role.SYSTEM.toString(), getSystemPrompt()),
+                    Message(Role.USER.toString(), followUpPrompt)
+                )
                 val followResult = ApiClient.sendChatMessage(followMessages)
                 if (followResult.isFailure) break
                 val followResp = followResult.getOrNull() ?: break
@@ -95,20 +111,23 @@ object ContextAwareAgent {
 
         if (context.buttons.isNotEmpty()) {
             prompt.append("BUTTONS:\n")
-            context.buttons.take(30).forEach { b -> prompt.append("- [${b.selector}] ${b.text ?: "(no text)"}\n") }
+            context.buttons.take(30)
+                .forEach { b -> prompt.append("- [${b.selector}] ${b.text ?: "(no text)"}\n") }
             prompt.append("\n")
         }
 
         if (context.inputs.isNotEmpty()) {
             prompt.append("INPUTS:\n")
-            context.inputs.take(30).forEach { i -> prompt.append("- [${i.selector}] type:${i.type ?: ""} placeholder:${i.placeholder ?: ""}\n") }
+            context.inputs.take(30)
+                .forEach { i -> prompt.append("- [${i.selector}] type:${i.type ?: ""} placeholder:${i.placeholder ?: ""}\n") }
             prompt.append("\n")
         }
 
         // Key text elements
         if (context.textElements.isNotEmpty()) {
             prompt.append("TEXT:\n")
-            context.textElements.filter { it.text?.length ?: 0 > 5 }.take(40).forEach { t -> prompt.append("- [${t.selector}] ${t.text}\n") }
+            context.textElements.filter { it.text?.length ?: 0 > 5 }.take(40)
+                .forEach { t -> prompt.append("- [${t.selector}] ${t.text}\n") }
             prompt.append("\n")
         }
 
@@ -160,10 +179,16 @@ object ContextAwareAgent {
                 })();
                 """.trimIndent()
             }
+
             else -> "(function(){const el = document.querySelector('button, a, [role=\'button\']'); if(el){el.click(); return 'clicked';} return 'not_found'; })();"
         }
 
-        webView.evaluateJavascript(jsCode) { res -> Log.d("ContextAwareAgent", "click result: $res") }
+        webView.evaluateJavascript(jsCode) { res ->
+            Log.d(
+                "ContextAwareAgent",
+                "click result: $res"
+            )
+        }
     }
 
     private suspend fun executeType(action: WebAction, webView: WebView) {
@@ -180,7 +205,12 @@ object ContextAwareAgent {
             })();
         """.trimIndent()
 
-        webView.evaluateJavascript(jsCode) { res -> Log.d("ContextAwareAgent", "type result: $res") }
+        webView.evaluateJavascript(jsCode) { res ->
+            Log.d(
+                "ContextAwareAgent",
+                "type result: $res"
+            )
+        }
     }
 
     private suspend fun executeScroll(webView: WebView) {
@@ -193,7 +223,12 @@ object ContextAwareAgent {
         } else {
             "document.forms[0]?.submit();"
         }
-        webView.evaluateJavascript(jsCode) { res -> Log.d("ContextAwareAgent", "submit result: $res") }
+        webView.evaluateJavascript(jsCode) { res ->
+            Log.d(
+                "ContextAwareAgent",
+                "submit result: $res"
+            )
+        }
     }
 
     // ------------------------- Helpers -------------------------

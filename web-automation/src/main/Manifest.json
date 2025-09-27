@@ -4,15 +4,15 @@
   "metaData": {
     "author": "Siddhesh",
     "role": "Tool-Neuron-Team",
-    "pluginApi":"0.0.6-alpha"
+    "pluginApi": "0.0.6-alpha"
   },
   "pluginType": "Hybrid",
-  "mainClass" : "com.mp.web_searching.WebSearchPlugin",
+  "mainClass": "com.mp.web_searching.WebSearchPlugin",
   "tools": [
     {
-      "toolName" : "searchWeb",
+      "toolName": "searchWeb",
       "description": "This Tool Helps In WebSearch",
-      "args" : {
+      "args": {
         "query": "String"
       }
     }

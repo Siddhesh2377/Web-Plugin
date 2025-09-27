@@ -153,18 +153,20 @@ object WebPageAnalyzer {
         val elements = mutableListOf<WebPageElement>()
         for (i in 0 until jsonArray.length()) {
             val obj = jsonArray.getJSONObject(i)
-            elements.add(WebPageElement(
-                tagName = obj.optString("tagName", "").ifEmpty { "" },
-                id = obj.optString("id").takeIf { it.isNotEmpty() },
-                className = obj.optString("className").takeIf { it.isNotEmpty() },
-                text = obj.optString("text").takeIf { it.isNotEmpty() },
-                type = obj.optString("type").takeIf { it.isNotEmpty() },
-                placeholder = obj.optString("placeholder").takeIf { it.isNotEmpty() },
-                href = obj.optString("href").takeIf { it.isNotEmpty() },
-                value = obj.optString("value").takeIf { it.isNotEmpty() },
-                selector = obj.optString("selector", "") ?: "",
-                position = obj.optInt("position", 0)
-            ))
+            elements.add(
+                WebPageElement(
+                    tagName = obj.optString("tagName", "").ifEmpty { "" },
+                    id = obj.optString("id").takeIf { it.isNotEmpty() },
+                    className = obj.optString("className").takeIf { it.isNotEmpty() },
+                    text = obj.optString("text").takeIf { it.isNotEmpty() },
+                    type = obj.optString("type").takeIf { it.isNotEmpty() },
+                    placeholder = obj.optString("placeholder").takeIf { it.isNotEmpty() },
+                    href = obj.optString("href").takeIf { it.isNotEmpty() },
+                    value = obj.optString("value").takeIf { it.isNotEmpty() },
+                    selector = obj.optString("selector", "") ?: "",
+                    position = obj.optInt("position", 0)
+                )
+            )
         }
         return elements
     }
@@ -174,13 +176,15 @@ object WebPageAnalyzer {
         val forms = mutableListOf<FormInfo>()
         for (i in 0 until jsonArray.length()) {
             val obj = jsonArray.getJSONObject(i)
-            forms.add(FormInfo(
-                formId = obj.optString("formId").takeIf { it.isNotEmpty() },
-                formClass = obj.optString("formClass").takeIf { it.isNotEmpty() },
-                action = obj.optString("action").takeIf { it.isNotEmpty() },
-                method = obj.optString("method").takeIf { it.isNotEmpty() },
-                inputs = parseElementList(obj.optJSONArray("inputs"))
-            ))
+            forms.add(
+                FormInfo(
+                    formId = obj.optString("formId").takeIf { it.isNotEmpty() },
+                    formClass = obj.optString("formClass").takeIf { it.isNotEmpty() },
+                    action = obj.optString("action").takeIf { it.isNotEmpty() },
+                    method = obj.optString("method").takeIf { it.isNotEmpty() },
+                    inputs = parseElementList(obj.optJSONArray("inputs"))
+                )
+            )
         }
         return forms
     }

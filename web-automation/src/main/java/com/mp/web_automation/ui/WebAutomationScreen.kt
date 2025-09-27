@@ -2,10 +2,30 @@ package com.mp.web_automation.ui
 
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -52,9 +72,11 @@ fun ContextAwareWebAutomationScreen() {
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("🧠 Context-Aware AI Assistant", style = MaterialTheme.typography.headlineSmall)
-                Text("Analyzes webpage and performs intelligent automation",
+                Text(
+                    "Analyzes webpage and performs intelligent automation",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -78,7 +100,11 @@ fun ContextAwareWebAutomationScreen() {
                                     statusMessage = "Analyzing webpage and processing request..."
 
                                     try {
-                                        val result = ContextAwareAgent.processUserRequestWithContext(userInput, webView!!)
+                                        val result =
+                                            ContextAwareAgent.processUserRequestWithContext(
+                                                userInput,
+                                                webView!!
+                                            )
                                         result.onSuccess {
                                             statusMessage = "Automation completed successfully!"
                                         }.onFailure { error ->
@@ -143,7 +169,8 @@ fun ContextAwareWebAutomationScreen() {
                                 coroutineScope.launch {
                                     statusMessage = "Analyzing current page..."
                                     val context = WebPageAnalyzer.analyzePage(webView!!)
-                                    statusMessage = "Found: ${context?.forms?.size ?: 0} forms, ${context?.buttons?.size ?: 0} buttons"
+                                    statusMessage =
+                                        "Found: ${context?.forms?.size ?: 0} forms, ${context?.buttons?.size ?: 0} buttons"
                                 }
                             }
                         }) {

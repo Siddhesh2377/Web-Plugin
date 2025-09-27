@@ -8,13 +8,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
+import com.mp.web_automation.WebAutomationPlugin
 import com.mp.web_plugin.ui.theme.WebPluginTheme
-import com.mp.web_searching.WebSearchPlugin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +23,7 @@ class MainActivity : ComponentActivity() {
                     val context = LocalContext.current
 
                     Column(Modifier.padding(innerPadding)) {
-                        WebSearchPlugin(context).ToolPreviewContent()
+                        WebAutomationPlugin(context).AppContent()
                     }
                 }
             }

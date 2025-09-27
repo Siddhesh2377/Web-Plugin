@@ -1,25 +1,28 @@
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.io.FileInputStream
+import java.util.Properties
+import kotlin.apply
 
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ktx.serialization)
 }
 
+val localPropertiesFile = rootProject.file("local.properties")
+
 android {
-    namespace = "com.mp.web_plugin"
+    namespace = "com.mp.web_automation"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.mp.web_plugin"
-        minSdk = 33
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
+        minSdk = 30
+        buildConfigField("String", "api", getProperty("api"))
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -47,13 +50,18 @@ android {
 }
 
 dependencies {
-    implementation(files("libs/plugins-release.aar"))
-    implementation(project(":web-searching"))
-    implementation(project(":web-automation"))
+    compileOnly(files("libs/plugins-release.aar"))
 
-    implementation(libs.org.jetbrains.kotlin.kotlin.stdlib)
-    implementation(libs.jetbrains.kotlin.stdlib.jdk8)
-    implementation(libs.jetbrains.kotlin.stdlib.common)
+    implementation(libs.jsoup)
+    implementation(libs.okhttp)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.okhttp.sse)
+
+    implementation(libs.jetbrains.kotlin.stdlib)
+    implementation(libs.kotlin.stdlib.jdk8)
+    implementation(libs.kotlin.stdlib.common)
+    implementation(libs.kotlinx.serialization.json)
 
 
 
@@ -76,3 +84,16 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
+
+fun getProperty(value: String): String {
+    return if (localPropertiesFile.exists()) {
+        val localProps = Properties().apply {
+            load(FileInputStream(localPropertiesFile))
+        }
+        localProps.getProperty(value) ?: "\"sample_val\""
+    } else {
+        System.getenv(value) ?: "\"sample_val\""
+    }
+}
+
+apply(from = rootProject.file("export.gradle.kts"))

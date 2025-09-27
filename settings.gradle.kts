@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 rootProject.name = "Web-Plugin"
 include(":app")
 include(":web-searching")
+include(":web-automation")

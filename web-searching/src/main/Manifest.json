@@ -15,6 +15,12 @@
       "args" : {
         "query": "String"
       }
+    }, {
+      "toolName" : "fetchPage",
+      "description": "This Tool Helps In Fetching / Scrapping WebPages / url",
+      "args" : {
+        "url": "String"
+      }
     }
   ]
 }

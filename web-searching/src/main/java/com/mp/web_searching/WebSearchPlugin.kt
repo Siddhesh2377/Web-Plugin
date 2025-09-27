@@ -17,30 +17,32 @@ import org.json.JSONObject
 class WebSearchPlugin(appContext: Context) : PluginApi(appContext) {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(job + Dispatchers.IO)
-    private lateinit var viewModel: ToolScreenViewModel
+
+    // create once outside Composable
+    private val viewModel: ToolScreenViewModel by lazy {
+        ToolScreenViewModel()
+    }
 
     @Composable
-    override fun ToolPreviewContent() {
-        viewModel = viewModel()
-        ToolingScreen(scope = ioScope)
+    override fun ToolPreviewContent(data: String) {
+        ToolingScreen(data = data, viewModel = viewModel)
     }
 
     @Composable
     override fun AppContent() {
-        ToolPreviewContent()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        job.cancel()
-        Log.d(TAG, "onDestroy: scope cancelled")
+        ToolingScreen(data = null, viewModel = viewModel)
     }
 
     @Keep
     override fun runTool(
         context: Context, toolName: String, args: JSONObject, callback: (result: Any) -> Unit
     ) {
-        super.runTool(context, toolName, args, callback)
         viewModel.runTool(ioScope, toolName, args, callback)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+        Log.d(TAG, "onDestroy: scope cancelled")
     }
 }

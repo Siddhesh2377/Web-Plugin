@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,18 +33,21 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mp.web_searching.models.PageSummary
 import com.mp.web_searching.models.SearchItem
+import com.mp.web_searching.models.SearchResponse
 import com.mp.web_searching.models.UiState
 import com.mp.web_searching.viewModels.ToolScreenViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.Json
+import org.json.JSONObject
 
 @Composable
-fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), scope: CoroutineScope) {
+fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), data: String?) {
     val state by viewModel.uiState.collectAsState()
     val ctx = LocalContext.current
-    var url by remember { mutableStateOf("https://en.wikipedia.org/wiki/Brain") }
 
 
     Surface(modifier = Modifier.fillMaxWidth()) {
@@ -51,46 +55,17 @@ fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), scope: Coroutine
             modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             StatusChip(state)
-
-
-            Button(onClick = {
-                viewModel.setLoading("Searching…")
-                scope.launch {
-                    try {
-                        val json =
-                            withTimeout(15_000L) { viewModel.searchWeb("Brain", 5) }
-                        Log.d("ToolingScreen", "searchWeb returned: $json")
-                        viewModel.searchAdapter.fromJson(json)
-                            ?.let { viewModel.setSearchSuccess(it) }
-                            ?: viewModel.setError("Parse error")
-                    } catch (t: Throwable) {
-                        val msg = "searchWeb failed: ${t.message ?: t::class.java.simpleName}"
-                        Log.w("ToolingScreen", msg, t)
-                        viewModel.setError(msg)
+            if (data != null) {
+                LaunchedEffect(data) {
+                    JSONObject(data).let {
+                        if (it.has("query")) {
+                            viewModel.setSearchSuccess(Json.decodeFromString<SearchResponse>(data))
+                        }else{
+                            viewModel.setFetchSuccess(Json.decodeFromString<PageSummary>(data))
+                        }
                     }
                 }
-            }) {
-                Text(text = "Search Web")
             }
-
-
-            Button(onClick = {
-                viewModel.setLoading("Fetching page…")
-                scope.launch {
-                    try {
-                        val res = withTimeout(15_000L) { viewModel.fetchAndSummarize(url) }
-                        viewModel.pageAdapter.fromJson(res)?.let { viewModel.setFetchSuccess(it) }
-                            ?: viewModel.setError("Parse error")
-                    } catch (t: Throwable) {
-                        val msg = "fetchPage failed: ${t.message ?: t::class.java.simpleName}"
-                        Log.w("ToolingScreen", msg, t)
-                        viewModel.setError(msg)
-                    }
-                }
-            }) {
-                Text(text = "Summarize Web")
-            }
-
 
             when (val s = state) {
                 UiState.Idle -> AssistCard(
@@ -106,12 +81,11 @@ fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), scope: Coroutine
                         "Search complete",
                         "“${s.data.query}” • ${s.data.results.size} results • ${s.data.elapsed_ms} ms"
                     )
-                    if (s.data.results.isNotEmpty()) {
-                        url = s.data.results[0].url
-                    }
+
                     SearchResultsList(
                         results = s.data.results,
-                        onOpen = { link -> viewModel.openLink(ctx, link) })
+                        onOpen = { link -> viewModel.openLink(ctx, link) }
+                    )
                 }
 
 

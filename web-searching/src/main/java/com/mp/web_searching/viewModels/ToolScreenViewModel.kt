@@ -113,7 +113,7 @@ class ToolScreenViewModel : ViewModel() {
 
     suspend fun fetchAndSummarize(url: String, maxChars: Int = 1200): String =
         withContext(Dispatchers.IO) {
-            require(url.startsWith("http")) { "URL must start with http/https" }
+            //require(url.startsWith("http")) { "URL must start with http/https" }
 
             val req = Request.Builder().url(url).header("User-Agent", UA)
                 .header("Accept-Language", "en-US,en;q=0.9").get().build()
@@ -186,7 +186,11 @@ class ToolScreenViewModel : ViewModel() {
                         // parse → UI state shows “Search complete”
                         searchAdapter.fromJson(json)?.let { setSearchSuccess(it) }
                             ?: run { setError("Parse error") }
-                        callback(json) // keep raw json for caller
+                        callback(JSONObject().apply {
+                            put("name", "Web-Searching")
+                            put("type", "text")
+                            put("output", json)
+                        }) // keep raw json for caller
                     } catch (t: Throwable) {
                         val msg = "searchWeb failed: ${t.message ?: t::class.java.simpleName}"
                         Log.w(TAG, msg, t)
@@ -206,7 +210,11 @@ class ToolScreenViewModel : ViewModel() {
                         val res = withTimeout(15_000L) { fetchAndSummarize(url) }
                         pageAdapter.fromJson(res)?.let { setFetchSuccess(it) }
                             ?: run { setError("Parse error") }
-                        callback(res)
+                        callback(JSONObject().apply {
+                            put("name", "Web-Searching")
+                            put("type", "text")
+                            put("output", res)
+                        })
                     } catch (t: Throwable) {
                         val msg = "fetchPage failed: ${t.message ?: t::class.java.simpleName}"
                         Log.w(TAG, msg, t)

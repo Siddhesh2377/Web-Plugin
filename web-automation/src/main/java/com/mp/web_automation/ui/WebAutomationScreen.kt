@@ -1,7 +1,11 @@
 package com.mp.web_automation.ui
 
+import android.webkit.CookieManager
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.webkit.WebSettings
+import android.content.Context
+import android.webkit.WebChromeClient
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -190,14 +194,39 @@ fun ContextAwareWebAutomationScreen() {
         ) {
             AndroidView(
                 factory = { ctx ->
+                    // Initialize WebView with basic settings
                     WebView(ctx).apply {
+                        webView = this
+                        
+                        // Enable JavaScript
                         settings.javaScriptEnabled = true
+                        
+                        // Enable DOM storage
                         settings.domStorageEnabled = true
+                        
+                        // Enable database
+                        settings.databaseEnabled = true
+                        
+                        // Enable file access
                         settings.allowFileAccess = true
                         settings.allowContentAccess = true
-                        webViewClient = WebViewClient()
-                        webView = this
-                        loadUrl("https://docs.google.com/forms/d/e/1FAIpQLScY0_gE-XkiFUjHtzDr1UszfWm5VuXu2y3zRa_NycE0G503-w/viewform")
+                        
+                        // Configure cookie manager
+                        val cookieManager = CookieManager.getInstance()
+                        cookieManager.setAcceptCookie(true)
+                        cookieManager.setAcceptThirdPartyCookies(this, true)
+                        
+                        // Simple WebViewClient
+                        webViewClient = object : WebViewClient() {
+                            override fun onPageFinished(view: WebView, url: String) {
+                                super.onPageFinished(view, url)
+                                // Force cookie sync
+                                CookieManager.getInstance().flush()
+                            }
+                        }
+                        
+                        // Set initial URL
+                        loadUrl("https://www.google.com")
                     }
                 },
                 modifier = Modifier.fillMaxSize()

@@ -16,6 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        flatDir {
+            dir("${rootDir.path}/libs")
+        }
     }
 }
 
@@ -23,3 +26,4 @@ rootProject.name = "Web-Plugin"
 include(":app")
 include(":web-searching")
 include(":web-automation")
+include(":util-plugin")

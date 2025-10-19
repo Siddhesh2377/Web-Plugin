@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation(files("libs/plugins-release.aar"))
+    implementation(":plugins-release@aar")
     
     // Core Android dependencies
     implementation("androidx.core:core-ktx:1.12.0")
@@ -77,6 +77,7 @@ dependencies {
     // Project modules
     implementation(project(":web-searching"))
     implementation(project(":web-automation"))
+    implementation(project(":util-plugin"))
     
     // Testing
     testImplementation("junit:junit:4.13.2")

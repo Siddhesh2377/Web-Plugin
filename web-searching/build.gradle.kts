@@ -40,7 +40,7 @@ android {
 }
 
 dependencies {
-    compileOnly(files("libs/plugins-release.aar"))
+    compileOnly(":plugins-release@aar")
 
     implementation(libs.jsoup)
     implementation(libs.okhttp)

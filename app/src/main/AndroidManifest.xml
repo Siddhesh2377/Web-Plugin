@@ -12,17 +12,29 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
+        tools:replace="android:theme"
         android:theme="@style/Theme.WebPlugin">
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.WebPlugin">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity android:name=".UtilPluginDemoActivity"
+            android:exported="true"
+            android:theme="@style/Theme.WebPlugin">
+        </activity>
+
+        <activity
+            android:name=".ToolsActivity"
+            android:exported="true"
+            android:theme="@style/Theme.WebPlugin">
+
         </activity>
     </application>
 

@@ -1,0 +1,20 @@
+{
+  "name": "Util-Plugin",
+  "description": "A Plugin For Doing Daily Tasks",
+  "metaData": {
+    "author": "Siddhesh",
+    "role": "Tool-Neuron-Team",
+    "pluginApi":"0.0.6-alpha"
+  },
+  "pluginType": "Hybrid",
+  "mainClass" : "com.mp.web_searching.UtilPlugin",
+  "tools": [
+    {
+      "toolName" : "searchWeb",
+      "description": "This Tool Helps In WebSearch",
+      "args" : {
+        "query": "String"
+      }
+    }
+  ]
+}

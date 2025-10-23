@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation(":plugins-release@aar")
+    compileOnly(":plugin-api-release@aar")
     
     // Core Android dependencies
     implementation("androidx.core:core-ktx:1.12.0")

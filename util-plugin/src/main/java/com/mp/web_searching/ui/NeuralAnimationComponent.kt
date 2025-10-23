@@ -1,4 +1,4 @@
-package com.mp.web_searching
+package com.mp.web_searching.ui
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable

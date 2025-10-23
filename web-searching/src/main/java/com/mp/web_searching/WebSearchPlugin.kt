@@ -4,8 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.dark.plugins.api.PluginApi
+import com.mp.plugin_api.api.PluginApi
 import com.mp.web_searching.Common.TAG
 import com.mp.web_searching.screens.ToolingScreen
 import com.mp.web_searching.viewModels.ToolScreenViewModel
@@ -14,7 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import org.json.JSONObject
 
-class WebSearchPlugin(appContext: Context) : PluginApi(appContext) {
+class WebSearchPlugin() : PluginApi() {
     private val job = SupervisorJob()
     private val ioScope = CoroutineScope(job + Dispatchers.IO)
 
@@ -34,7 +33,7 @@ class WebSearchPlugin(appContext: Context) : PluginApi(appContext) {
     }
 
     @Keep
-    override fun runTool(
+    override fun onToolCalled(
         context: Context, toolName: String, args: JSONObject, callback: (result: Any) -> Unit
     ) {
         viewModel.runTool(ioScope, toolName, args, callback)

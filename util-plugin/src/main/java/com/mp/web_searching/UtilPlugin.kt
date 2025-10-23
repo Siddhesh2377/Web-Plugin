@@ -23,6 +23,9 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.dark.plugins.api.PluginApi
+import com.mp.web_searching.ui.FuturisticNeuralAnimation
+import com.mp.web_searching.ui.NeuralThemes
+import com.mp.web_searching.ui.rememberNeuralNetworkState
 import org.json.JSONObject
 
 class UtilPlugin(appContext: Context) : PluginApi(appContext) {
@@ -42,7 +45,7 @@ class UtilPlugin(appContext: Context) : PluginApi(appContext) {
         Card(modifier = Modifier.size(350.dp, 550.dp)) {
             Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    "Email Writer",
+                    "File Manager",
                     modifier = Modifier.padding(12.dp),
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium

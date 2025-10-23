@@ -1,16 +1,12 @@
 /**
- * export.gradle.kts – Plugin packager tasks (bootstrap removed).
+ * export.gradle.kts – Optimized Plugin packager tasks
  * -------------------------------------------------------------
- * Apply **after** your module’s `plugins { id("com.android.library") }` block:
+ * Apply after your module's `plugins { id("com.android.library") }` block:
  *
  * ```kotlin
  * plugins { id("com.android.library") }
  * apply(from = rootProject.file("export.gradle.kts"))
  * ```
- *
- * This script avoids hard-coding AGP classes by using **reflection** to read
- * `compileSdk` and `namespace` from the `android` extension. That way the
- * script compiles even when applied via `apply(from = …)`.
  */
 
 import org.gradle.internal.os.OperatingSystem
@@ -18,158 +14,158 @@ import java.io.File
 import java.util.Properties
 
 // -------------------------------------------------------------------------
-//  Helper utilities
+//  Cached helper utilities
 // -------------------------------------------------------------------------
-fun sdkRootDir(): File {
+val sdkDir: File by lazy {
     val lp = Properties().apply {
         val f = rootProject.file("local.properties")
         if (f.exists()) f.inputStream().use { load(it) }
     }
-    lp.getProperty("sdk.dir")?.let { return File(it) }
-    System.getenv("ANDROID_SDK_ROOT")?.let { return File(it) }
-    System.getenv("ANDROID_HOME")?.let { return File(it) }
+    lp.getProperty("sdk.dir")?.let { return@lazy File(it) }
+    System.getenv("ANDROID_SDK_ROOT")?.let { return@lazy File(it) }
+    System.getenv("ANDROID_HOME")?.let { return@lazy File(it) }
     error("Android SDK not found. Set sdk.dir in local.properties or ANDROID_SDK_ROOT.")
 }
 
-fun latestBuildTools(sdk: File): File {
-    val dir = File(sdk, "build-tools")
-    val all = dir.listFiles()?.filter { it.isDirectory }?.sortedByDescending { it.name } ?: emptyList()
-    require(all.isNotEmpty()) { "No build-tools in $dir" }
-    return all.first()
+val buildToolsDir: File by lazy {
+    val dir = File(sdkDir, "build-tools")
+    dir.listFiles()?.filter { it.isDirectory }?.maxByOrNull { it.name }
+        ?: error("No build-tools found in $dir")
 }
 
 // -------------------------------------------------------------------------
-//  Read properties from the android {} block via reflection
+//  Cached android extension properties via reflection
 // -------------------------------------------------------------------------
-val androidExt = extensions.getByName("android")
+val androidExt by lazy { extensions.getByName("android") }
 
-val compileSdkInt: Int = run {
-    val m = androidExt.javaClass.methods.firstOrNull { it.name == "getCompileSdk" }
-        ?: error("Couldn't find getCompileSdk on android extension; ensure AGP 7.0+")
-    (m.invoke(androidExt) as Number).toInt()
+val compileSdkInt: Int by lazy {
+    val method = androidExt.javaClass.methods.firstOrNull { it.name == "getCompileSdk" }
+        ?: error("getCompileSdk not found on android extension; ensure AGP 7.0+")
+    (method.invoke(androidExt) as Number).toInt()
 }
 
-val namespaceStr: String = run {
-    val getter = androidExt.javaClass.methods.firstOrNull { it.name == "getNamespace" }
-    getter?.invoke(androidExt) as? String
+val namespaceStr: String by lazy {
+    androidExt.javaClass.methods.firstOrNull { it.name == "getNamespace" }
+        ?.invoke(androidExt) as? String
         ?: "com.dark.${project.name.replace('-', '_')}"
 }
 
 // -------------------------------------------------------------------------
-//  Common paths / files
+//  Common paths (providers for lazy evaluation and caching)
 // -------------------------------------------------------------------------
-val sdkDir        = sdkRootDir()
-val buildToolsDir = latestBuildTools(sdkDir)
-val d8Exe         = File(buildToolsDir, if (OperatingSystem.current().isWindows) "d8.bat" else "d8")
-val androidJarFile = File(sdkDir, "platforms/android-$compileSdkInt/android.jar")
+val d8Exe = provider {
+    File(buildToolsDir, if (OperatingSystem.current().isWindows) "d8.bat" else "d8")
+}
 
-val manifestSrc  = layout.projectDirectory.file("src/main/Manifest.json")
-val tmpDir       = layout.buildDirectory.dir("tmp/pluginDex")
-val dexOutDir    = layout.buildDirectory.dir("outputs/pluginDex")
+val androidJar = provider {
+    File(sdkDir, "platforms/android-$compileSdkInt/android.jar")
+}
+
+val manifestSrc = layout.projectDirectory.file("src/main/Manifest.json")
+val tmpDir = layout.buildDirectory.dir("tmp/pluginDex")
+val dexOutDir = layout.buildDirectory.dir("outputs/pluginDex")
 val pluginOutDir = layout.buildDirectory.dir("outputs/plugin")
 
 // -------------------------------------------------------------------------
-//  Task 1 – extract classes.jar from release AAR / build intermediates
+//  Task configuration
 // -------------------------------------------------------------------------
 val extractClassesJar = tasks.register<Copy>("extractClassesJar") {
     dependsOn("assembleRelease")
 
-    val aar = layout.buildDirectory.file("outputs/aar/${project.name}-release.aar")
-    from({ zipTree(aar.get().asFile) })
+    val aarFile = layout.buildDirectory.file("outputs/aar/${project.name}-release.aar")
+    from(zipTree(aarFile))
     include("classes.jar")
     into(tmpDir)
-    doLast { println(">> Extracted classes.jar -> ${tmpDir.get().asFile.resolve("classes.jar")}") }
+
+    // Enable incremental build
+    outputs.upToDateWhen { tmpDir.get().asFile.resolve("classes.jar").exists() }
 }
 
-// -------------------------------------------------------------------------
-//  Task 2 – run d8 to create classes.dex
-// -------------------------------------------------------------------------
 val makeDex = tasks.register<Exec>("makeDex") {
     dependsOn(extractClassesJar)
 
-    doFirst {
-        require(d8Exe.exists()) { "d8 not found: $d8Exe" }
-        require(androidJarFile.exists()) { "android.jar not found for compileSdk $compileSdkInt" }
-        dexOutDir.get().asFile.mkdirs()
-    }
-
     val classesJar = tmpDir.get().asFile.resolve("classes.jar")
-    val kotlinStdlibJar = configurations.named("releaseCompileClasspath").get()
-        .filter { it.name.startsWith("kotlin-stdlib") }
-        .firstOrNull()
-        ?: error("kotlin-stdlib not found in releaseCompileClasspath")
+    val dexFile = dexOutDir.map { it.asFile.resolve("classes.dex") }
 
-    commandLine(
-        d8Exe.absolutePath,
-        "--release",
-        "--min-api", "26",
-        "--lib", androidJarFile.absolutePath,
-        "--output", dexOutDir.get().asFile.absolutePath,
-        classesJar.absolutePath,
-        kotlinStdlibJar.absolutePath
-    )
+    inputs.file(classesJar)
+    inputs.file(androidJar)
+    outputs.file(dexFile)
 
-    doLast {
-        val dex = dexOutDir.get().asFile.resolve("classes.dex")
-        check(dex.exists()) { "d8 finished but no classes.dex produced." }
-        println(">> d8 wrote: $dex")
+    doFirst {
+        val d8 = d8Exe.get()
+        val androidJarFile = androidJar.get()
+
+        require(d8.exists()) { "d8 not found: $d8" }
+        require(androidJarFile.exists()) { "android.jar not found for compileSdk $compileSdkInt" }
+
+        dexOutDir.get().asFile.mkdirs()
+
+        val kotlinStdlib = configurations.named("releaseCompileClasspath").get()
+            .firstOrNull { it.name.startsWith("kotlin-stdlib") }
+            ?: error("kotlin-stdlib not found in releaseCompileClasspath")
+
+        commandLine(
+            d8.absolutePath,
+            "--release",
+            "--min-api", "26",
+            "--lib", androidJarFile.absolutePath,
+            "--output", dexOutDir.get().asFile.absolutePath,
+            classesJar.absolutePath,
+            kotlinStdlib.absolutePath
+        )
     }
 }
 
-
-// -------------------------------------------------------------------------
-//  Task 3 – package plugin.dex.jar
-// -------------------------------------------------------------------------
 val packDexJar = tasks.register<Zip>("packDexJar") {
     dependsOn(makeDex)
+
     archiveFileName.set("plugin.dex.jar")
     destinationDirectory.set(dexOutDir)
+
     from(dexOutDir) { include("classes.dex") }
-    doLast { println(">> Created plugin.dex.jar") }
+
+    // Enable incremental build
+    inputs.file(dexOutDir.map { it.asFile.resolve("classes.dex") })
+    outputs.file(dexOutDir.map { it.asFile.resolve("plugin.dex.jar") })
 }
 
-// -------------------------------------------------------------------------
-//  Task 4 – copy Manifest.json into output dir
-// -------------------------------------------------------------------------
 val copyManifest = tasks.register<Copy>("copyManifest") {
-    dependsOn(packDexJar)
     from(manifestSrc)
     into(pluginOutDir)
-    rename { "Manifest.json" }
+
+    inputs.file(manifestSrc)
+    outputs.file(pluginOutDir.map { it.asFile.resolve("Manifest.json") })
+
     doFirst {
         check(manifestSrc.asFile.exists()) {
             "Manifest.json not found at ${manifestSrc.asFile}. Place it at src/main/Manifest.json."
         }
     }
-    doLast { println(">> Copied manifest to ${pluginOutDir.get().asFile}") }
 }
 
-// -------------------------------------------------------------------------
-//  Task 5 – final distributable zip
-// -------------------------------------------------------------------------
 val packagePluginZip = tasks.register<Zip>("packagePluginZip") {
-    dependsOn(copyManifest)
+    dependsOn(packDexJar, copyManifest)
+
     group = "build"
     description = "Builds a distributable plugin ZIP."
 
     archiveFileName.set("${project.name}-plugin.zip")
     destinationDirectory.set(pluginOutDir)
 
-    from(dexOutDir)    { include("plugin.dex.jar") }
+    from(dexOutDir) { include("plugin.dex.jar") }
     from(pluginOutDir) { include("Manifest.json") }
 
-    eachFile { path = name } // flatten
+    eachFile { path = name }
     includeEmptyDirs = false
 
-    doLast {
-        println(">> Plugin package: ${destinationDirectory.get().asFile.resolve(archiveFileName.get())}")
-    }
+    // Enable build cache
+    inputs.file(dexOutDir.map { it.asFile.resolve("plugin.dex.jar") })
+    inputs.file(pluginOutDir.map { it.asFile.resolve("Manifest.json") })
 }
 
 // -------------------------------------------------------------------------
 //  Convenience aliases
 // -------------------------------------------------------------------------
-
 tasks.register("buildPluginDexJar") {
     group = "build"
     description = "Builds plugin.dex.jar (jar containing classes.dex)."

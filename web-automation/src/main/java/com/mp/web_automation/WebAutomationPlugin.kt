@@ -12,10 +12,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.dark.plugins.api.PluginApi
+import com.mp.plugin_api.api.PluginApi
 import com.mp.web_automation.ui.ContextAwareWebAutomationScreen
 
-class WebAutomationPlugin(appContext: Context) : PluginApi(appContext) {
+class WebAutomationPlugin(appContext: Context) : PluginApi() {
 
 
     @Composable

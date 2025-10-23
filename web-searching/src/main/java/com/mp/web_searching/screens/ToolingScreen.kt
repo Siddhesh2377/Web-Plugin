@@ -45,7 +45,7 @@ import kotlinx.serialization.json.Json
 import org.json.JSONObject
 
 @Composable
-fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), data: String?) {
+fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), data: String? = null) {
     val state by viewModel.uiState.collectAsState()
     val ctx = LocalContext.current
 

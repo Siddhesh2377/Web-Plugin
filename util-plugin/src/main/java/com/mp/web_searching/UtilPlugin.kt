@@ -22,13 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.dark.plugins.api.PluginApi
+import com.mp.plugin_api.api.PluginApi
 import com.mp.web_searching.ui.FuturisticNeuralAnimation
 import com.mp.web_searching.ui.NeuralThemes
 import com.mp.web_searching.ui.rememberNeuralNetworkState
 import org.json.JSONObject
 
-class UtilPlugin(appContext: Context) : PluginApi(appContext) {
+class UtilPlugin(appContext: Context) : PluginApi() {
 
     @Composable
     override fun ToolPreviewContent(data: String) {
@@ -63,13 +63,6 @@ class UtilPlugin(appContext: Context) : PluginApi(appContext) {
                 }
             }
         }
-    }
-
-    @Keep
-    override fun runTool(
-        context: Context, toolName: String, args: JSONObject, callback: (result: Any) -> Unit
-    ) {
-
     }
 
 }

@@ -26,9 +26,6 @@ class UtilPluginDemoActivity : ComponentActivity() {
                     Box(Modifier.fillMaxSize().padding(it), contentAlignment = Alignment.Center){
                         val plugin = UtilPlugin(this@UtilPluginDemoActivity)
                         plugin.AppContent()
-                        plugin.runTool(this@UtilPluginDemoActivity, "toolName", JSONObject()) { result ->
-
-                        }
                     }
                 }
             }

@@ -1,6 +1,5 @@
 package com.mp.web_searching.screens
 
-import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -22,9 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,9 +33,6 @@ import com.mp.web_searching.models.SearchItem
 import com.mp.web_searching.models.SearchResponse
 import com.mp.web_searching.models.UiState
 import com.mp.web_searching.viewModels.ToolScreenViewModel
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import org.json.JSONObject
 
@@ -50,7 +42,10 @@ fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), data: String? = 
     val ctx = LocalContext.current
 
 
-    Surface(modifier = Modifier.fillMaxWidth()) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.secondary.copy(0.2f)
+    ) {
         Column(
             modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -60,7 +55,7 @@ fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), data: String? = 
                     JSONObject(data).let {
                         if (it.has("query")) {
                             viewModel.setSearchSuccess(Json.decodeFromString<SearchResponse>(data))
-                        }else{
+                        } else {
                             viewModel.setFetchSuccess(Json.decodeFromString<PageSummary>(data))
                         }
                     }
@@ -84,8 +79,7 @@ fun ToolingScreen(viewModel: ToolScreenViewModel = viewModel(), data: String? = 
 
                     SearchResultsList(
                         results = s.data.results,
-                        onOpen = { link -> viewModel.openLink(ctx, link) }
-                    )
+                        onOpen = { link -> viewModel.openLink(ctx, link) })
                 }
 
 
